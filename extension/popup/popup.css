@@ -1,0 +1,20 @@
+* { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+body { margin: 12px; width: 640px; }
+header { display: flex; align-items: center; justify-content: space-between; }
+h1 { font-size: 16px; margin: 0; }
+.controls { display: flex; gap: 8px; }
+button { padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; background: #f7f7f7; cursor: pointer; }
+button:hover { background: #eee; }
+button:disabled { cursor: wait; opacity: 0.7; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 12px; font-size: 13px; }
+.remote { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid #e3e3e3; border-radius: 8px; background: #fafafa; }
+.remote-status { font-size: 12px; color: #444; line-height: 1.4; }
+.remote-status[data-state="ok"] { color: #13643b; }
+.remote-status[data-state="warn"] { color: #835b00; }
+.remote-status[data-state="error"] { color: #9f2020; }
+.remote-actions { display: flex; gap: 8px; }
+canvas { border: 1px solid #e3e3e3; border-radius: 8px; }
+
+/* time range buttons */
+.ranges { display: flex; gap: 6px; margin: 10px 0 6px; flex-wrap: wrap; }
+.ranges .range[aria-selected="true"] { background: #e7efff; border-color: #3a6cf0; }

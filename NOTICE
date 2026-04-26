@@ -1,0 +1,12 @@
+This repository is derived from Arithmetic Tracker for Zetamac by Nathan Negera.
+
+- Upstream add-on page: https://addons.mozilla.org/en-US/firefox/addon/arithmetic-tracker-for-zetamac/
+- Upstream license: MIT License
+
+Changes in this repository include:
+
+- Google Apps Script webhook integration
+- Google Sheets remote upload queueing
+- Firefox transport workarounds for Apps Script redirects and preflight behavior
+- Public deployment documentation and packaging helpers
+- Extension identity changes to avoid conflicting with the upstream AMO add-on

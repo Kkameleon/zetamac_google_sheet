@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Zetamac Google Sheet Sync",
+  "version": "1.0.1",
+  "description": "Track Zetamac scores locally and sync them into a Google Sheet through Apps Script.",
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Zetamac Google Sheet Sync"
+  },
+  "icons": {
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png"
+  },
+  "permissions": [
+    "storage",
+    "scripting",
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "*://zetamac.com/*",
+    "*://*.zetamac.com/*",
+    "https://script.google.com/*",
+    "https://*.googleusercontent.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://zetamac.com/*",
+        "*://*.zetamac.com/*"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "js": [
+        "content/content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "zetamac-google-sheet@example.invalid",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}

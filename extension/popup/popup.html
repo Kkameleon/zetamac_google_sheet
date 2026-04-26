@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Zetamac Google Sheet Sync</title>
+<link rel="stylesheet" href="popup.css" />
+<body>
+  <header>
+    <h1>Zetamac Sync</h1>
+    <div class="controls">
+      <button id="export">Export CSV</button>
+      <button id="clear">Clear</button>
+    </div>
+  </header>
+  <section class="stats">
+    <div><strong>Sessions:</strong> <span id="count">0</span></div>
+    <div><strong>Avg:</strong> <span id="avg">–</span></div>
+    <div><strong>Best:</strong> <span id="best">–</span></div>
+    <div><strong>Last:</strong> <span id="last">–</span></div>
+  </section>
+  <section class="remote">
+    <div id="remote-status" class="remote-status">Remote export not configured.</div>
+    <div class="remote-actions">
+      <button id="sync-remote">Sync Remote</button>
+      <button id="open-options">Options</button>
+    </div>
+  </section>
+
+  <canvas id="chart" width="640" height="260" aria-label="Score history"></canvas>
+
+  <script src="popup.js"></script>
+</body>
