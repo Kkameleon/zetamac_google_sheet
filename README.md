@@ -12,6 +12,7 @@ This repository is a derivative of Arithmetic Tracker for Zetamac by Nathan Nege
 - Exports and imports scores as CSV.
 - Uploads scores to a Google Sheet through an append-only Apps Script web app.
 - Lets you use the same sheet from multiple computers by giving each machine its own device name.
+- Builds a spreadsheet dashboard for score and per-operation timing trends.
 
 ## Security Model
 
@@ -40,6 +41,19 @@ This repository is a derivative of Arithmetic Tracker for Zetamac by Nathan Nege
    It should return JSON from `doGet()`, not a login page.
 
 The bundled Apps Script preserves existing rows, appends richer metric columns after `avg_50` and `time`, and skips backfill duplicates by `id` or by the `timestamp_ms + score` pair.
+
+## Create Or Refresh The Dashboard
+
+The Apps Script creates a managed `Zetamac Dashboard` sheet with four charts:
+
+- score over date and time
+- score by chronological game number
+- average addition, subtraction, multiplication, and division time over date and time
+- average operation time by chronological game number
+
+After installing this version of `apps-script/Code.gs`, run `refreshDashboard` once from the Apps Script editor and approve the spreadsheet permission. Reload the spreadsheet to expose `Zetamac Tracker -> Refresh Dashboard` in the menu bar. New score uploads refresh the dashboard automatically.
+
+When updating an existing web app, create a new deployment version from `Deploy -> Manage deployments`; editing the source alone does not update the `/exec` deployment. Keep the existing spreadsheet ID and shared secret when replacing the script.
 
 ## Load The Firefox Extension
 
