@@ -62,8 +62,54 @@ function drawChart(canvas, rows) {
   ctx.fillStyle = "#3a6cf0"; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
 }
 
+function csvCell(value) {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
 function toCSV(rows) {
-  return "timestamp,iso,score\n" + rows.map(r => `${r.t},${new Date(r.t).toISOString()},${r.s}`).join("\n");
+  const fields = [
+    "id",
+    "timestamp",
+    "iso",
+    "score",
+    "captureMethod",
+    "problemLogKey",
+    "problemCount",
+    "abandonedCount",
+    "durationMs",
+    "totalErrors",
+    "wrongAttempts",
+    "keystrokeErrorRate",
+    "attemptErrorRate",
+    "addCount",
+    "subCount",
+    "mulCount",
+    "divCount",
+    "meanAddMs",
+    "meanSubMs",
+    "meanMulMs",
+    "meanDivMs",
+    "slowest1",
+    "slowest1Ms",
+    "slowest2",
+    "slowest2Ms",
+    "slowest3",
+    "slowest3Ms",
+  ];
+
+  const lines = [fields.join(",")];
+  for (const row of rows) {
+    lines.push(fields.map((field) => {
+      if (field === "timestamp") return csvCell(row.t);
+      if (field === "iso") return csvCell(new Date(row.t).toISOString());
+      if (field === "score") return csvCell(row.s);
+      return csvCell(row[field]);
+    }).join(","));
+  }
+
+  return `${lines.join("\n")}\n`;
 }
 
 function updateStats(rows) {

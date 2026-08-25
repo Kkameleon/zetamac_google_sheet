@@ -7,16 +7,17 @@ This repository is a derivative of Arithmetic Tracker for Zetamac by Nathan Nege
 ## What It Does
 
 - Tracks Zetamac scores locally in Firefox.
+- Captures Zetamac's own `/log` request when available, including per-problem timing/error metrics.
 - Shows recent stats and a local score chart.
 - Exports and imports scores as CSV.
-- Uploads scores to a Google Sheet through an Apps Script web app.
+- Uploads scores to a Google Sheet through an append-only Apps Script web app.
 - Lets you use the same sheet from multiple computers by giving each machine its own device name.
 
 ## Security Model
 
-- The repository does not contain a webhook URL, spreadsheet ID, or shared secret.
-- The Apps Script template reads `SPREADSHEET_ID`, `SHEET_GID`, and `SHARED_SECRET` from Apps Script project properties.
-- The Firefox extension stores its webhook URL, secret, and device name in extension local storage on each machine.
+- The repository does not contain a webhook URL or real shared secret.
+- The Apps Script template contains placeholders for `SPREADSHEET_ID` and `SHARED_SECRET`; replace them before deployment and keep the secret private.
+- The Firefox extension stores its webhook URL, secret, and device name in Firefox Sync storage. Score history and the upload queue remain local to each Firefox profile.
 - If you edit local copies of this repo with real values, do not commit them.
 
 ## Repository Layout
@@ -30,17 +31,15 @@ This repository is a derivative of Arithmetic Tracker for Zetamac by Nathan Nege
 1. Open the target spreadsheet in Google Sheets.
 2. Open `Extensions -> Apps Script`.
 3. Replace the default script with the contents of `apps-script/Code.gs`.
-4. In Apps Script, open `Project Settings`.
-5. Under `Script properties`, add:
-   - `SPREADSHEET_ID`: the spreadsheet ID from the sheet URL
-   - `SHEET_GID`: the target sheet tab ID, usually `0` for the first tab
-   - `SHARED_SECRET`: a long random secret
-6. Deploy the script as a web app:
+4. In `apps-script/Code.gs`, replace `SPREADSHEET_ID` with the ID from the sheet URL and replace `SHARED_SECRET` with a long random secret.
+5. Deploy the script as a web app:
    - `Execute as`: `Me`
    - `Who has access`: `Anyone`
-7. Copy the generated `/exec` URL.
-8. Test the `/exec` URL in a private window.
+6. Copy the generated `/exec` URL.
+7. Test the `/exec` URL in a private window.
    It should return JSON from `doGet()`, not a login page.
+
+The bundled Apps Script preserves existing rows, appends richer metric columns after `avg_50` and `time`, and skips backfill duplicates by `id` or by the `timestamp_ms + score` pair.
 
 ## Load The Firefox Extension
 
@@ -60,15 +59,9 @@ Repeat the same extension setup on each computer. Use the same webhook URL and s
 
 ## Migrating From The Original AMO Add-On
 
-Because this repository uses a different Firefox extension ID, it does not automatically inherit local storage from the upstream add-on.
+This repository now uses the same Firefox extension ID as the upstream add-on, `zetamac-tracker@nathan.dev`, so a temporary load keeps the existing local score storage instead of starting from an empty profile.
 
-To migrate old scores:
-
-1. Open the upstream add-on popup.
-2. Export CSV.
-3. Load this extension.
-4. Open Options and import the CSV.
-5. Click `Upload All Local Scores`.
+To backfill old scores, load this extension with `about:debugging`, open Options, and click `Upload All Local Scores`. Export/import is only needed if you intentionally change extension IDs or profiles.
 
 ## Development
 

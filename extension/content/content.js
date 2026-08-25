@@ -8,25 +8,18 @@ if (window.__zetamacTrackerInjected) {
 const LOG = (...a) => console.log("[ZetamacTracker]", ...a);
 const now = () => Date.now();
 
-const MAX_ROWS = 10000;
 const DEDUPE_MS = 60000;       // 60s: prevent multiple writes for same result
 let armed = false;             // we're mid-round
 let savedThisRound = false;    // we already saved the final score of this round
 let sawUnfinishedSinceInjection = false;
+let lastSentScore = null;
+let lastSentAt = 0;
 
 function makeRowId(ts, score) {
   if (typeof crypto?.randomUUID === "function") {
     return crypto.randomUUID();
   }
   return `score:${ts}:${score}:${Math.random().toString(36).slice(2, 10)}`;
-}
-
-async function getScores() {
-  const { scores = [] } = await browser.storage.local.get("scores");
-  return Array.isArray(scores) ? scores : [];
-}
-async function setScores(rows) {
-  await browser.storage.local.set({ scores: rows.slice(-MAX_ROWS) });
 }
 
 function getScoreFromText(txt) {
@@ -70,20 +63,19 @@ async function maybeSave() {
   }
 
   if ((armed || sawUnfinishedSinceInjection) && finished && !savedThisRound && typeof s.score === "number") {
-    const rows = await getScores();
-    const last = rows[rows.length - 1];
     const ts = now();
 
-    if (last && last.s === s.score && (ts - last.t) < DEDUPE_MS) {
+    if (lastSentScore === s.score && (ts - lastSentAt) < DEDUPE_MS) {
       LOG("skip duplicate", s.score);
     } else {
-      const row = { id: makeRowId(ts, s.score), t: ts, s: s.score };
-      rows.push(row);
-      await setScores(rows);
-      browser.runtime.sendMessage({ type: "record-score", row }).catch((error) => {
-        LOG("remote upload queue failed", error);
+      const row = { id: makeRowId(ts, s.score), t: ts, s: s.score, captureMethod: "dom" };
+      lastSentScore = s.score;
+      lastSentAt = ts;
+      browser.runtime.sendMessage({ type: "record-score", row }).then((status) => {
+        LOG("fallback score reported", s.score, status);
+      }).catch((error) => {
+        LOG("fallback score report failed", error);
       });
-      LOG("SAVED", s.score, "total:", rows.length);
     }
 
     savedThisRound = true;

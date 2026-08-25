@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Zetamac Google Sheet Sync",
-  "version": "1.0.1",
-  "description": "Track Zetamac scores locally and sync them into a Google Sheet through Apps Script.",
+  "name": "Arithmetic Tracker for Zetamac",
+  "version": "1.2.0",
+  "description": "Track scores on arithmetic.zetamac.com, visualize progress locally, and sync runs to Google Sheets.",
   "background": {
     "scripts": [
       "background.js"
@@ -10,7 +10,7 @@
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Zetamac Google Sheet Sync"
+    "default_title": "Zetamac Tracker"
   },
   "icons": {
     "48": "icons/icon48.png",
@@ -20,7 +20,8 @@
     "storage",
     "scripting",
     "tabs",
-    "webNavigation"
+    "webNavigation",
+    "webRequest"
   ],
   "host_permissions": [
     "*://zetamac.com/*",
@@ -48,7 +49,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "zetamac-google-sheet@example.invalid",
+      "id": "zetamac-tracker@nathan.dev",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
         "required": [

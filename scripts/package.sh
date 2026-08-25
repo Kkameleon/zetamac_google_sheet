@@ -19,11 +19,14 @@ VERSION="$(jq -r '.version' "$EXT_DIR/manifest.json")"
 OUT="$DIST_DIR/zetamac-google-sheet-$VERSION.xpi"
 
 mkdir -p "$DIST_DIR"
-rm -f "$OUT"
+TMP_DIR="$(mktemp -d "$DIST_DIR/.zetamac-google-sheet-$VERSION.XXXXXX")"
+TMP_OUT="$TMP_DIR/zetamac-google-sheet-$VERSION.xpi"
 
 (
   cd "$EXT_DIR"
-  zip -r "$OUT" . >/dev/null
+  zip -r "$TMP_OUT" . -x 'META-INF/*' >/dev/null
 )
 
+mv "$TMP_OUT" "$OUT"
+rmdir "$TMP_DIR"
 echo "Built $OUT"

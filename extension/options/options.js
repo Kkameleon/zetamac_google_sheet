@@ -13,7 +13,7 @@ function setRemoteStatusText(text, state = "ok") {
 }
 
 async function loadRemoteSettings() {
-  const { [REMOTE_SETTINGS_KEY]: settings = {} } = await browser.storage.local.get({ [REMOTE_SETTINGS_KEY]: {} });
+  const { [REMOTE_SETTINGS_KEY]: settings = {} } = await browser.storage.sync.get({ [REMOTE_SETTINGS_KEY]: {} });
   document.getElementById("webhookUrl").value = settings.webhookUrl || "";
   document.getElementById("secret").value = settings.secret || "";
   document.getElementById("deviceName").value = settings.deviceName || "";
@@ -48,13 +48,13 @@ async function refreshRemoteStatus() {
 }
 
 browser.storage.onChanged.addListener((changes, area) => {
-  if (area !== "local") return;
+  if (area !== "local" && area !== "sync") return;
 
-  if (changes[REMOTE_SETTINGS_KEY]) {
+  if (area === "sync" && changes[REMOTE_SETTINGS_KEY]) {
     loadRemoteSettings().catch(console.error);
   }
 
-  if (changes.remoteStatus || changes.remoteQueue || changes.remoteUploadedIds) {
+  if (area === "local" && (changes.remoteStatus || changes.remoteQueue || changes.remoteUploadedIds)) {
     refreshRemoteStatus().catch(console.error);
   }
 });
@@ -98,21 +98,65 @@ document.getElementById("import").onclick = async () => {
   if (!f) return;
 
   const text = await f.text();
-  const lines = text.trim().split(/\r?\n/);
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) {
     alert("No data rows.");
     return;
   }
 
+  const parseCsvLine = (line) => {
+    const cells = [];
+    let current = "";
+    let quoted = false;
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (quoted) {
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"';
+          i += 1;
+        } else if (ch === '"') {
+          quoted = false;
+        } else {
+          current += ch;
+        }
+      } else if (ch === '"') {
+        quoted = true;
+      } else if (ch === ",") {
+        cells.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    cells.push(current);
+    return cells;
+  };
+
+  const headers = parseCsvLine(lines[0]).map((header) => header.trim());
+  const index = (name) => headers.indexOf(name);
+  const timestampIndex = index("timestamp");
+  const scoreIndex = index("score");
+  if (timestampIndex < 0 || scoreIndex < 0) {
+    alert("CSV must include timestamp and score columns.");
+    return;
+  }
+
   const rows = [];
   for (const line of lines.slice(1)) {
-    const [t, , s] = line.split(",");
+    const cells = parseCsvLine(line);
+    const t = cells[timestampIndex];
+    const s = cells[scoreIndex];
     const tt = Number(t);
     const ss = Number(s);
     if (!Number.isFinite(tt) || !Number.isFinite(ss)) {
       continue;
     }
-    rows.push({ id: `legacy:${tt}:${ss}`, t: tt, s: ss });
+    const row = { id: `legacy:${tt}:${ss}`, t: tt, s: ss };
+    const idIndex = index("id");
+    if (idIndex >= 0 && cells[idIndex]) {
+      row.id = cells[idIndex];
+    }
+    rows.push(row);
   }
 
   await browser.storage.local.set({ scores: rows });
