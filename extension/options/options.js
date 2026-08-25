@@ -1,4 +1,5 @@
 const REMOTE_SETTINGS_KEY = "remoteExport";
+const REMOTE_DEVICE_NAME_KEY = "remoteDeviceName";
 
 function formatWhen(ts) {
   if (!ts) return "never";
@@ -13,7 +14,7 @@ function setRemoteStatusText(text, state = "ok") {
 }
 
 async function loadRemoteSettings() {
-  const { [REMOTE_SETTINGS_KEY]: settings = {} } = await browser.storage.sync.get({ [REMOTE_SETTINGS_KEY]: {} });
+  const settings = await browser.runtime.sendMessage({ type: "get-remote-settings" });
   document.getElementById("webhookUrl").value = settings.webhookUrl || "";
   document.getElementById("secret").value = settings.secret || "";
   document.getElementById("deviceName").value = settings.deviceName || "";
@@ -50,7 +51,8 @@ async function refreshRemoteStatus() {
 browser.storage.onChanged.addListener((changes, area) => {
   if (area !== "local" && area !== "sync") return;
 
-  if (area === "sync" && changes[REMOTE_SETTINGS_KEY]) {
+  if ((area === "sync" && changes[REMOTE_SETTINGS_KEY]) ||
+      (area === "local" && changes[REMOTE_DEVICE_NAME_KEY])) {
     loadRemoteSettings().catch(console.error);
   }
 

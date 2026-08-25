@@ -17,7 +17,7 @@ This repository is a derivative of Arithmetic Tracker for Zetamac by Nathan Nege
 
 - The repository does not contain a webhook URL or real shared secret.
 - The Apps Script template contains placeholders for `SPREADSHEET_ID` and `SHARED_SECRET`; replace them before deployment and keep the secret private.
-- The Firefox extension stores its webhook URL, secret, and device name in Firefox Sync storage. Score history and the upload queue remain local to each Firefox profile.
+- The Firefox extension stores its webhook URL and secret in Firefox Sync storage. The device name, score history, and upload queue remain local to each Firefox profile.
 - If you edit local copies of this repo with real values, do not commit them.
 
 ## Repository Layout

@@ -1,4 +1,5 @@
 const REMOTE_SETTINGS_KEY = "remoteExport";
+const REMOTE_DEVICE_NAME_KEY = "remoteDeviceName";
 const REMOTE_QUEUE_KEY = "remoteQueue";
 const REMOTE_UPLOADED_KEY = "remoteUploadedIds";
 const REMOTE_STATUS_KEY = "remoteStatus";
@@ -353,8 +354,34 @@ function normalizeSettings(settings) {
 }
 
 async function getRemoteSettings() {
-  const result = await browser.storage.sync.get({ [REMOTE_SETTINGS_KEY]: {} });
-  return normalizeSettings(result[REMOTE_SETTINGS_KEY]);
+  const [syncResult, localResult] = await Promise.all([
+    browser.storage.sync.get({ [REMOTE_SETTINGS_KEY]: {} }),
+    browser.storage.local.get({ [REMOTE_DEVICE_NAME_KEY]: "" }),
+  ]);
+  const rawSettings = syncResult[REMOTE_SETTINGS_KEY] || {};
+  const synced = normalizeSettings(rawSettings);
+  let deviceName = typeof localResult[REMOTE_DEVICE_NAME_KEY] === "string"
+    ? localResult[REMOTE_DEVICE_NAME_KEY].trim()
+    : "";
+  const migrations = [];
+
+  if (!deviceName && synced.deviceName) {
+    deviceName = synced.deviceName;
+    migrations.push(browser.storage.local.set({ [REMOTE_DEVICE_NAME_KEY]: deviceName }));
+  }
+  if (Object.prototype.hasOwnProperty.call(rawSettings, "deviceName")) {
+    migrations.push(browser.storage.sync.set({
+      [REMOTE_SETTINGS_KEY]: {
+        webhookUrl: synced.webhookUrl,
+        secret: synced.secret,
+      },
+    }));
+  }
+  if (migrations.length) {
+    await Promise.all(migrations);
+  }
+
+  return { ...synced, deviceName };
 }
 
 async function setRemoteSettings(settings) {
@@ -363,7 +390,15 @@ async function setRemoteSettings(settings) {
     throw new Error("Webhook URL must be a deployed Google Apps Script /exec URL.");
   }
 
-  await browser.storage.sync.set({ [REMOTE_SETTINGS_KEY]: next });
+  await Promise.all([
+    browser.storage.sync.set({
+      [REMOTE_SETTINGS_KEY]: {
+        webhookUrl: next.webhookUrl,
+        secret: next.secret,
+      },
+    }),
+    browser.storage.local.set({ [REMOTE_DEVICE_NAME_KEY]: next.deviceName }),
+  ]);
   return next;
 }
 
@@ -782,6 +817,8 @@ browser.runtime.onMessage.addListener((message) => {
       return recordIncomingRow(message.row);
     case "get-remote-status":
       return getRemoteStatus();
+    case "get-remote-settings":
+      return getRemoteSettings();
     case "save-remote-settings":
       return setRemoteSettings(message.settings).then(() => flushQueue());
     case "retry-remote-upload":
